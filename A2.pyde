@@ -35,14 +35,26 @@ def init_game():
     selected_color = None
 
 init_game()
-    
-def draw_block(x,y,sizee,colour):
 
-# parameter x(int),y(int),sizee(int),colour(str)
+# วาดกราฟิก
+def get_color_fill(colour):
+    if colour == "RED": fill(255, 80, 80)
+    elif colour == "GREEN": fill(80, 255, 80)
+    elif colour == "BLUE": fill(80, 80, 255)
+    elif colour == "YELLOW": fill(255, 255, 80)
 
-# return -
+def draw_block(x, y, sizee, colour):
+    get_color_fill(colour)
+    stroke(255)
+    rect(x * sizee, y * sizee, sizee, sizee)
 
-pass
+def draw_grid_recursive(x, y):
+    if y >= GRID_ROWS: return # เช็คแนวตั้ง
+    if x >= GRID_COLS:        # เช็คแนวนอน
+        draw_grid_recursive(0, y + 1)
+        return
+    draw_block(x, y, BLOCK_SIZE, board[y][x])
+    draw_grid_recursive(x + 1, y)
 
 
 def change_colour(colour):
