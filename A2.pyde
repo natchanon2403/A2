@@ -131,3 +131,88 @@ def draw_hud():
         fill(200, 0, 0)
         textSize(40)
         text("GAME OVER", 90, 160)
+
+def keyPressed():
+    # ใช้คำสั่ง in ทำให้เช็คตัวเล็กหรือตัวใหญ่ได้ในบรรทัดเดียว
+    if key in ('s', 'S'):
+        save_game()
+    elif key in ('l', 'L'):
+        load_game()
+
+def mousePressed():
+    global selected_color, save_status_msg
+    
+    if game_state != "PLAYING":
+        # ถ้าจบเกมแล้วคลิก ให้เริ่มเกมใหม่เลย
+        init_game()
+        return
+
+    clicked_on_button = False
+    btn_idx = 0
+    
+    # ตรวจสอบว่าผู้เล่นคลิกโดนปุ่มเลือกสีหรือไม่
+    while btn_idx < len(COLORS):
+        btn_x = 50 + (btn_idx * 100)
+        btn_y = 400
+        
+        in_x_range = abs(mouseX - btn_x) <= 25
+        in_y_range = abs(mouseY - btn_y) <= 25
+        
+        if in_x_range and in_y_range:
+            selected_color = COLORS[btn_idx]
+            clicked_on_button = True
+            save_status_msg = ""
+            break # เจอแล้วหยุดเช็คปุ่มอื่น
+            
+        btn_idx += 1
+            
+    # ถ้าไม่ได้คลิกปุ่มสี แต่มีสีถูกเลือกไว้อยู่แล้ว ให้ตรวจสอบการคลิกในกระดาน
+    if not clicked_on_button and selected_color is not None:
+        mouse_in_board = (0 <= mouseX < 400) and (0 <= mouseY < 320)
+        
+        if mouse_in_board:
+            grid_col = int(mouseX / BLOCK_SIZE)
+            grid_row = int(mouseY / BLOCK_SIZE)
+            change_colour(grid_col, grid_row, selected_color)
+
+def draw():
+    background(230)
+    
+    # วาดกระดานหลัก
+    row_idx = 0
+    while row_idx < GRID_ROWS:
+        col_idx = 0
+        while col_idx < GRID_COLS:
+            current_color = board[row_idx][col_idx]
+            get_color_fill(current_color)
+            
+            stroke(255)
+            block_x = col_idx * BLOCK_SIZE
+            block_y = row_idx * BLOCK_SIZE
+            rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
+            
+            col_idx += 1
+        row_idx += 1
+            
+    # วาดปุ่มเลือกสี 4 สีด้านล่าง
+    btn_idx = 0
+    while btn_idx < len(COLORS):
+        btn_color = COLORS[btn_idx]
+        get_color_fill(btn_color)
+        
+        if btn_color == selected_color:
+            stroke(255)
+            strokeWeight(3) # ทำไฮไลท์ให้ปุ่มที่โดนเลือก
+        else:
+            stroke(0)
+            strokeWeight(1)
+            
+        btn_x = 50 + (btn_idx * 100)
+        btn_y = 400
+        ellipse(btn_x, btn_y, 50, 50)
+        
+        btn_idx += 1
+        
+    # รีเซ็ตความหนาเส้น และเรียกวาด UI
+    strokeWeight(1)
+    draw_hud()
