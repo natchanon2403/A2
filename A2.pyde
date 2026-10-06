@@ -1,4 +1,5 @@
 import random
+import os
 
 GRID_COLS = 10 # จำนวนช่องแนวนอน
 GRID_ROWS = 8  # จำนวนช่องแนวตั้ง
@@ -11,13 +12,14 @@ target_final_color = ""
 moves_left = 12
 game_state = "PLAYING"
 selected_color = None
+save_status_msg = ""
 
 def setup():
     size(400, 460)
     init_game()
 
 def init_game():
-    global board, target_final_color, moves_left, game_state, selected_color
+    global board, target_final_color, moves_left, game_state, selected_color, save_status_msg
     
     # สร้างกระดาน
     board = []
@@ -38,6 +40,59 @@ def init_game():
     moves_left = 12
     game_state = "PLAYING"
     selected_color = None
+    save_status_msg = ""
+
+def save_game():
+    global save_status_msg
+    try:
+        with open("savegame.txt", "w") as file:
+            file.write(target_final_color + "\n")
+            file.write(str(moves_left) + "\n")
+            file.write(str(selected_color) + "\n")
+            
+            row_idx = 0
+            while row_idx < GRID_ROWS:
+                row_string = ",".join(board[row_idx])
+                file.write(row_string + "\n")
+                row_idx += 1
+                
+        save_status_msg = "SAVED!"
+    except:
+        save_status_msg = "SAVE ERROR!"
+
+def load_game():
+    global board, target_final_color, moves_left, selected_color, game_state, save_status_msg
+    
+    if not os.path.exists("savegame.txt"):
+        save_status_msg = "NO SAVE FILE!"
+        return
+        
+    try:
+        with open("savegame.txt", "r") as file:
+            lines = file.readlines()
+            
+        target_final_color = lines[0].strip()
+        moves_left = int(lines[1].strip())
+        
+        # จัดการเรื่องสีที่ถูกเลือกค้างไว้
+        saved_color = lines[2].strip()
+        if saved_color == "None":
+            selected_color = None
+        else:
+            selected_color = saved_color
+            
+        # โหลดกระดาน
+        board = []
+        row_idx = 0
+        while row_idx < GRID_ROWS:
+            color_list = lines[row_idx + 3].strip().split(",")
+            board.append(color_list)
+            row_idx += 1
+            
+        game_state = "PLAYING"
+        save_status_msg = "LOADED!"
+    except:
+        save_status_msg = "LOAD ERROR!"
 
 def spread(start_x, start_y, target_colour, new_colour):
     # ถ้าสีเหมือนเดิมอยู่แล้วไม่ต้องทำอะไร
@@ -100,10 +155,10 @@ def change_colour(start_x, start_y, new_colour):
 def get_color_fill(colour):
     # ใช้ Dictionary เพื่อจับคู่สี
     color_rgb = {
-        "RED": (255, 80, 80),
-        "GREEN": (80, 255, 80),
-        "BLUE": (80, 80, 255),
-        "YELLOW": (255, 255, 80)
+        "RED": (255, 130, 130),
+        "GREEN": (130, 215, 150),
+        "BLUE": (140, 190, 255),
+        "YELLOW": (255, 225, 120)
     }
     
     # ดึงค่า RGB มาจาก Dictionary (ถ้าไม่มีค่าให้เป็นสีดำกัน error)
@@ -121,6 +176,14 @@ def draw_hud():
     get_color_fill(target_final_color)
     stroke(0)
     ellipse(195, 340, 20, 20)
+
+    # โชว์ข้อความ Save / Load
+    fill(80)
+    textSize(12)
+    text("[S] Save  [L] Load", 225, 345)
+    
+    fill(0, 150, 0)
+    text(save_status_msg, 335, 345)
     
     # ข้อความตอนจบเกม
     if game_state == "WON":
@@ -176,7 +239,7 @@ def mousePressed():
             change_colour(grid_col, grid_row, selected_color)
 
 def draw():
-    background(230)
+    background(245)
     
     # วาดกระดานหลัก
     row_idx = 0
